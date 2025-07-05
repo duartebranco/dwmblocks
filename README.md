@@ -1,4 +1,4 @@
-duartebranco's dwmblocks
+# duartebranco's dwmblocks
 
 This is my personal build of dwmblocks, forked from Luke Smith's build, with several changes.
 
