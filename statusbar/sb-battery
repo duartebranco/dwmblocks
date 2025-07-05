@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# Prints all batteries, their percentage remaining and an emoji corresponding
+# to charge status and battery level.
+
+case $BLOCK_BUTTON in
+	3) notify-send "🔋 Battery module" "" ;;
+	6) setsid -f st -e vim "$0" ;;
+esac
+
+# Loop through all attached batteries and format the info
+for battery in /sys/class/power_supply/BAT?*; do
+	# If non-first battery, print a space separator.
+	[ -n "${capacity+x}" ] && printf " "
+
+	# Read status and capacity into variables first
+	battery_status="$(cat "$battery/status" 2>&1)"
+	battery_capacity="$(cat "$battery/capacity" 2>&1)"
+
+	capacity="$battery_capacity"
+
+	# Handle different statuses and capacity levels
+	case "$battery_status" in
+		"Full")
+			status="󱞜 "
+			;;
+		"Charging")
+			status="󰂄 "
+			;;
+		"Discharging"|"Not charging"|"Unknown")
+			# Choose icon based on battery percentage
+			if [ "$capacity" -ge 90 ]; then
+				status="󰁹 "
+			elif [ "$capacity" -ge 80 ]; then
+				status="󰂂 "
+			elif [ "$capacity" -ge 70 ]; then
+				status="󰂁 "
+			elif [ "$capacity" -ge 60 ]; then
+				status="󰂀 "
+			elif [ "$capacity" -ge 50 ]; then
+				status="󰁿 "
+			elif [ "$capacity" -ge 40 ]; then
+				status="󰁾 "
+			elif [ "$capacity" -ge 30 ]; then
+				status="󰁽 "
+			elif [ "$capacity" -ge 20 ]; then
+				status="󰁼 "
+			elif [ "$capacity" -ge 10 ]; then
+				status="󰂃 "
+			else
+				status="󰂃 "
+			fi
+
+			# Handle low battery warnings
+			if [ "$capacity" -lt 10 ]; then
+				# Send urgent notification and reduce brightness
+				notify-send -u critical "⚠️ CRITICAL BATTERY" "Battery at ${capacity}%! Reducing brightness to save power."
+				for brightness in 60 50 40 30 20; do
+                    brightnessctl set ${brightness}%
+                    pkill -RTMIN+11 dwmblocks
+                    sleep 1s
+                done
+				pkill -RTMIN+10 dwmblocks
+			fi
+			;;
+		*)
+			status="♻️ "
+			;;
+	esac
+
+	# Prints the info
+	printf "%s%d%%" "$status" "$capacity"
+done && printf " |" "\\n"

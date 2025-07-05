@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# Power/logout menu. Click to show shutdown/restart/logout options.
+
+power_menu() {
+    choice="$(echo -e "󰚥 Shutdown\n󰑓 Restart\n Logout (Kill dwm)" | ~/scripts/dmenu.sh -g 3 -l 1 -p "Power Options:")"
+
+    case "$choice" in
+        "󰚥 Shutdown")
+            confirm="$(echo -e "Yes\nNo" | ~/scripts/dmenu.sh -g 2 -l 1 -p "Shutdown now?")"
+            [ "$confirm" = "Yes" ] && shutdown -h now
+            ;;
+        "󰑓 Restart")
+            confirm="$(echo -e "Yes\nNo" | ~/scripts/dmenu.sh -g 2 -l 1 -p "Restart now?")"
+            [ "$confirm" = "Yes" ] && reboot
+            ;;
+        " Logout (Kill dwm)")
+            confirm="$(echo -e "Yes\nNo" | ~/scripts/dmenu.sh -g 2 -l 1 -p "Logout (kill dwm)?")"
+            [ "$confirm" = "Yes" ] && pkill dwm
+            ;;
+        *) exit 0 ;;
+    esac
+}
+
+case $BLOCK_BUTTON in
+    1) power_menu ;;
+    3) notify-send "⏻ Power module" "\n• Left click to open power menu
+• Options: Shutdown, Restart, Logout (kill dwm)" ;;
+    6) setsid -f st -e vim "$0" ;;
+esac
+
+echo "⏻ "

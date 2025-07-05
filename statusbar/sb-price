@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# Bitcoin price in EUR using CoinMarketCap Pro API
+# dwmblocks handles automatic updates every 9000 seconds (2.5 hours)
+
+icon="₿"
+symbol="€"
+api_url="https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC&convert=EUR"
+***REMOVED***
+
+# Fetch and parse price from Pro API
+get_btc_price() {
+    curl -sf -H "X-CMC_PRO_API_KEY: $api_key" "$api_url" 2>/dev/null |
+    grep -o '"EUR":{"price":[^,}]*' |
+    grep -o '[0-9.]*'
+}
+
+# Handle mouse clicks
+case $BLOCK_BUTTON in
+    1)
+        # Left click - open browser to https://coinmarketcap.com/currencies/bitcoin/
+        xdg-open "https://coinmarketcap.com/currencies/bitcoin/" >/dev/null 2>&1 &
+        ;;
+
+    2)
+        # Middle click - update (force refresh by killing and restarting dwmblocks)
+        pkill -RTMIN+21 dwmblocks
+        ;;
+    3)
+        # Right click - help
+        notify-send "$icon Bitcoin Module" "\n• Left click: Open CoinMarketCap\n• Middle click: Force update\n• Right click: This help"
+        ;;
+    6)
+        # Edit script
+        setsid -f st -e vim "$0"
+        ;;
+esac
+
+# Get and display price
+price=$(get_btc_price)
+
+if [ -n "$price" ] && [ "$price" != "null" ]; then
+    # Round to whole number to avoid printf issues
+    rounded_price=$(echo "$price" | cut -d. -f1)
+    printf " %s%s%s |" "$icon " "$symbol" "$rounded_price"
+else
+    # Fallback display if API fails
+    printf "%s-- |" "$icon"
+fi
