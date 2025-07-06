@@ -3,6 +3,8 @@
 # Bitcoin price in EUR using CoinMarketCap Pro API
 # dwmblocks handles automatic updates every 9000 seconds (2.5 hours)
 
+[ -f "$(dirname "$0")/API.sh" ] && . "$(dirname "$0")/API.sh"
+
 icon="₿"
 symbol="€"
 api_url="https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC&convert=EUR"
