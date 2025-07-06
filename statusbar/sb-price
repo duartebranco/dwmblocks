@@ -6,7 +6,6 @@
 icon="₿"
 symbol="€"
 api_url="https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC&convert=EUR"
-***REMOVED***
 
 # Fetch and parse price from Pro API
 get_btc_price() {
