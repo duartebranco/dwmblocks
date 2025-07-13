@@ -1,19 +1,31 @@
 #!/bin/sh
 
-filter() { sed "/^volume:/d;s/\\[paused\\].*/⏸/g;/\\[playing\\].*/d;/^ERROR/Q" | paste -sd ' ' -;}
+filter() {
+    # Get the status and info from mpc
+    info="$(mpc status | sed '/^volume:/d;/^ERROR/Q')"
+    # Extract playing/paused status from the second line
+    status_emoji="$(echo "$info" | sed -n '2p' | grep -o '\[playing\]\|\[paused\]' | sed 's/\[playing\]//;s/\[paused\]//')"
+    # Get only the first line (the title)
+    title="$(echo "$info" | sed -n '1p')"
+    # Truncate if needed
+    title="$(echo "$title" | awk '{max=30; if(length($0)>max) print substr($0,1,max-3)"..."; else print $0}')"
+    # Output with emojis and decorations
+    if [ -z "$title" ]; then
+	    echo "󰎇 |"
+    else
+	    echo "󰎇 $title $status_emoji |"
+	fi
+}
+
+#filter() {
+#    sed "/^volume:/d;s/\[paused\].*//g;s/\[playing\].*//g;/^ERROR/Q" | paste -sd ' ' - | sed 's/^/󰎇 /;s/$/ |/'
+#}
 
 pidof -x sb-mpdup >/dev/null 2>&1 || sb-mpdup >/dev/null 2>&1 &
 
 case $BLOCK_BUTTON in
-	1) mpc status | filter ; setsid -f "$TERMINAL" -e ncmpcpp ;;  # right click, pause/unpause
-	2) mpc toggle | filter ;;  # right click, pause/unpause
-	3) mpc status | filter ; notify-send "🎵 Music module" "\- Shows mpd song playing.
-- ⏸ when paused.
-- Left click opens ncmpcpp.
-- Middle click pauses.
-- Scroll changes track.";;  # right click, pause/unpause
-	4) mpc prev   | filter ;;  # scroll up, previous
-	5) mpc next   | filter ;;  # scroll down, next
-	6) mpc status | filter ; setsid -f "$TERMINAL" -e "$EDITOR" "$0" ;;
+	1) mpc toggle | filter ;;
+	3) mpc status | filter ; notify-send "󰎇 Music module" "• Left click: Toggle pause";;
+	6) mpc status | filter ; setsid -f st -e vim "$0" ;;
 	*) mpc status | filter ;;
 esac

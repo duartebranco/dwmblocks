@@ -4,70 +4,99 @@
 # to charge status and battery level.
 
 case $BLOCK_BUTTON in
-	3) notify-send "🔋 Battery module" "" ;;
-	6) setsid -f st -e vim "$0" ;;
+    3) notify-send "󰁹 Battery module" "" ;;
+    6) setsid -f st -e vim "$0" ;;
 esac
+
+# Initialize output variable
+output=""
 
 # Loop through all attached batteries and format the info
 for battery in /sys/class/power_supply/BAT?*; do
-	# If non-first battery, print a space separator.
-	[ -n "${capacity+x}" ] && printf " "
+    # If non-first battery, print a space separator.
+    [ -n "${capacity+x}" ] && output="$output "
 
-	# Read status and capacity into variables first
-	battery_status="$(cat "$battery/status" 2>&1)"
-	battery_capacity="$(cat "$battery/capacity" 2>&1)"
+    # Read status and capacity into variables first
+    battery_status_file="$battery/status"
+    battery_capacity_file="$battery/capacity"
 
-	capacity="$battery_capacity"
+    if [ -r "$battery_status_file" ] && [ -r "$battery_capacity_file" ]; then
+        battery_status="$(cat "$battery_status_file")"
+        capacity="$(cat "$battery_capacity_file")"
+    else
+        # Skip this battery if files are not readable
+        continue
+    fi
 
-	# Handle different statuses and capacity levels
-	case "$battery_status" in
-		"Full")
-			status="󱞜 "
-			;;
-		"Charging")
-			status="󰂄 "
-			;;
-		"Discharging"|"Not charging"|"Unknown")
-			# Choose icon based on battery percentage
-			if [ "$capacity" -ge 90 ]; then
-				status="󰁹 "
-			elif [ "$capacity" -ge 80 ]; then
-				status="󰂂 "
-			elif [ "$capacity" -ge 70 ]; then
-				status="󰂁 "
-			elif [ "$capacity" -ge 60 ]; then
-				status="󰂀 "
-			elif [ "$capacity" -ge 50 ]; then
-				status="󰁿 "
-			elif [ "$capacity" -ge 40 ]; then
-				status="󰁾 "
-			elif [ "$capacity" -ge 30 ]; then
-				status="󰁽 "
-			elif [ "$capacity" -ge 20 ]; then
-				status="󰁼 "
-			elif [ "$capacity" -ge 10 ]; then
-				status="󰂃 "
-			else
-				status="󰂃 "
-			fi
+    # Handle different statuses and capacity levels
+    case "$battery_status" in
+        "Full")
+            status="󱞜 "
+            ;;
+        "Charging")
+            status="󰂄 "
+            # Restore brightness if we were in low battery mode
+            if [ -f /tmp/battery_low_notified ] && [ -f /tmp/original_brightness ]; then
+                original_brightness=$(cat /tmp/original_brightness)
+                brightnessctl -q set "$original_brightness"
+                rm -f /tmp/battery_low_notified /tmp/original_brightness
+                notify-send "󰂄 Charging" "Restored brightness to $original_brightness"
+                pkill -RTMIN+11 dwmblocks
+            fi
+            ;;
+        "Discharging"|"Not charging"|"Unknown")
+            # Choose icon based on battery percentage
+            if [ "$capacity" -ge 90 ]; then
+                status="󰁹 "
+            elif [ "$capacity" -ge 80 ]; then
+                status="󰂂 "
+            elif [ "$capacity" -ge 70 ]; then
+                status="󰂁 "
+            elif [ "$capacity" -ge 60 ]; then
+                status="󰂀 "
+            elif [ "$capacity" -ge 50 ]; then
+                status="󰁿 "
+            elif [ "$capacity" -ge 40 ]; then
+                status="󰁾 "
+            elif [ "$capacity" -ge 30 ]; then
+                status="󰁽 "
+            elif [ "$capacity" -ge 20 ]; then
+                status="󰁼 "
+            elif [ "$capacity" -ge 10 ]; then
+                status="󰂃 "
+            else
+                status="󰂃 "
+            fi
 
-			# Handle low battery warnings
-			if [ "$capacity" -lt 10 ]; then
-				# Send urgent notification and reduce brightness
-				notify-send -u critical "⚠️ CRITICAL BATTERY" "Battery at ${capacity}%! Reducing brightness to save power."
-				for brightness in 60 50 40 30 20; do
-                    brightnessctl set ${brightness}%
+            # Handle low battery warnings
+            if [ "$capacity" -lt 10 ]; then
+                # Only notify once to avoid spamming
+                if [ ! -f /tmp/battery_low_notified ]; then
+                    # Store original brightness before reducing
+                    original_brightness=$(brightnessctl get)
+                    echo "$original_brightness" > /tmp/original_brightness
+
+                    notify-send -u critical " CRITICAL BATTERY" "Battery at ${capacity}%! Reducing brightness to save power."
+                    touch /tmp/battery_low_notified
+                    for brightness in 60 50 40 30 20; do
+                        brightnessctl -q set ${brightness}%
+                        sleep 0.2s
+                    done
                     pkill -RTMIN+11 dwmblocks
-                    sleep 1s
-                done
-				pkill -RTMIN+10 dwmblocks
-			fi
-			;;
-		*)
-			status="♻️ "
-			;;
-	esac
+                fi
+            else
+                # Remove notification flag if battery recovers
+                [ -f /tmp/battery_low_notified ] && rm -f /tmp/battery_low_notified /tmp/original_brightness
+            fi
+            ;;
+        *)
+            status="♻️ "
+            ;;
+    esac
 
-	# Prints the info
-	printf "%s%d%%" "$status" "$capacity"
-done && printf " |" "\\n"
+    # Build the output string
+    output="$output$status$capacity%"
+done
+
+# Print the final output
+printf "%s |\n" "$output"

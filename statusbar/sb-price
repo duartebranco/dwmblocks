@@ -23,13 +23,9 @@ case $BLOCK_BUTTON in
         xdg-open "https://coinmarketcap.com/currencies/bitcoin/" >/dev/null 2>&1 &
         ;;
 
-    2)
-        # Middle click - update (force refresh by killing and restarting dwmblocks)
-        pkill -RTMIN+21 dwmblocks
-        ;;
     3)
         # Right click - help
-        notify-send "$icon Bitcoin Module" "\n• Left click: Open CoinMarketCap\n• Middle click: Force update\n• Right click: This help"
+        notify-send "$icon Bitcoin Module" "• Left click: Open CoinMarketCap"
         ;;
     6)
         # Edit script
@@ -43,8 +39,8 @@ price=$(get_btc_price)
 if [ -n "$price" ] && [ "$price" != "null" ]; then
     # Round to whole number to avoid printf issues
     rounded_price=$(echo "$price" | cut -d. -f1)
-    printf " %s%s%s |" "$icon " "$symbol" "$rounded_price"
+    printf "| %s%s%s |" "$icon " "$symbol" "$rounded_price"
 else
     # Fallback display if API fails
-    printf "%s-- |" "$icon"
+    printf "| %s-- |" "$icon"
 fi

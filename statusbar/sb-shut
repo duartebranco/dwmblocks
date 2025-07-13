@@ -3,7 +3,7 @@
 # Power/logout menu. Click to show shutdown/restart/logout options.
 
 power_menu() {
-    choice="$(echo -e "󰚥 Shutdown\n󰑓 Restart\n Logout (Kill dwm)" | ~/scripts/dmenu.sh -g 3 -l 1 -p "Power Options:")"
+    choice="$(echo -e "󰚥 Shutdown\n󰑓 Restart\n Logout" | ~/scripts/dmenu.sh -g 1 -l 3 -p "Power Options:")"
 
     case "$choice" in
         "󰚥 Shutdown")
@@ -24,8 +24,7 @@ power_menu() {
 
 case $BLOCK_BUTTON in
     1) power_menu ;;
-    3) notify-send "⏻ Power module" "\n• Left click to open power menu
-• Options: Shutdown, Restart, Logout (kill dwm)" ;;
+    3) notify-send "⏻ Power module" "• Left click: open power menu" ;;
     6) setsid -f st -e vim "$0" ;;
 esac
 

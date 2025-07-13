@@ -2,12 +2,9 @@
 
 case $BLOCK_BUTTON in
 	1) setsid -f st -e htop ;;
-	2) notify-send " Memory hogs" "$(ps axch -o cmd,%mem | awk '{cmd[$1]+=$2} END {for (i in cmd) print i, cmd[i]}' | sort -nrk2 | head)" ;;
-	3) notify-send " Memory module" "\n• Left click: Open htop
-• Middle click: Show memory hogs
-• Right click: This help" ;;
+	3) notify-send " Memory module" "• Left click: Open htop" ;;
 	6) setsid -f st -e vim "$0" ;;
 esac
 
-free --mebi | sed -n '2{p;q}' | awk '{printf (" %2.2fGiB/%.0fGiB", ( $3 / 1024), ($2 / 1024 + 0.5))}'
+free --mebi | awk '/Mem:/ {printf("  %.2fGiB", $3/1024)}'
 printf " |" "\\n"

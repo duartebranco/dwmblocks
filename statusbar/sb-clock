@@ -20,10 +20,7 @@ esac
 
 case $BLOCK_BUTTON in
 	1) notify-send "This Month" "$(cal | sed "s/\<$(date +'%e'|tr -d ' ')\>/<b><span color='red'>&<\/span><\/b>/")" ;;
-
-	3) notify-send " Time/date module" "\n• Left click to show the month via \`cal\`
-• Middle click: ?
-• Right click: This help" ;;
+	3) notify-send " Time/date module" "• Left click: show the month via \`cal\`" ;;
 	6) setsid -f st -e vim "$0" ;;
 esac
 
