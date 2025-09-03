@@ -3,19 +3,19 @@
 # Power/logout menu. Click to show shutdown/restart/logout options.
 
 power_menu() {
-    choice="$(echo -e "󰚥 Shutdown\n󰑓 Restart\n Logout" | ~/scripts/dmenu.sh -g 1 -l 3 -p "Power Options:")"
+    choice="$(echo -e "󰚥 Shutdown\n󰑓 Restart\n Logout" | dmenu -g 1 -l 3 -p "Power Options:")"
 
     case "$choice" in
         "󰚥 Shutdown")
-            confirm="$(echo -e "Yes\nNo" | ~/scripts/dmenu.sh -g 2 -l 1 -p "Shutdown now?")"
+            confirm="$(echo -e "Yes\nNo" | dmenu -g 2 -l 1 -p "Shutdown now?")"
             [ "$confirm" = "Yes" ] && shutdown -h now
             ;;
         "󰑓 Restart")
-            confirm="$(echo -e "Yes\nNo" | ~/scripts/dmenu.sh -g 2 -l 1 -p "Restart now?")"
+            confirm="$(echo -e "Yes\nNo" | dmenu -g 2 -l 1 -p "Restart now?")"
             [ "$confirm" = "Yes" ] && reboot
             ;;
-        " Logout (Kill dwm)")
-            confirm="$(echo -e "Yes\nNo" | ~/scripts/dmenu.sh -g 2 -l 1 -p "Logout (kill dwm)?")"
+        " Logout")
+            confirm="$(echo -e "Yes\nNo" | dmenu -g 2 -l 1 -p "Logout (kill dwm)?")"
             [ "$confirm" = "Yes" ] && pkill dwm
             ;;
         *) exit 0 ;;
